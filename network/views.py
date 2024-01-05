@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from django.core.paginator import Paginator
 
-from .models import User, Post
+from .models import User, Post, Follow
 
 
 def index(request):
@@ -91,6 +91,17 @@ def profile(request, user_id):
     all_posts = Post.objects.filter(user=user).order_by("id").reverse()
     username = user.username
 
+    following = Follow.objects.filter(user=user)
+    followers = Follow.objects.filter(user_follower=user)
+
+    try:
+        check_follow = followers.filter(user=User.objects.get(pk=request.user.id))
+        if len(check_follow) != 0:
+            is_following = True
+        else:
+            is_following = False
+    except:
+        is_following = False
     # Pagination
     paginator = Paginator(all_posts, 10)
     page_number = request.GET.get("page")
@@ -99,6 +110,59 @@ def profile(request, user_id):
     return render(
         request,
         "network/profile.html",
-        {"all_posts": all_posts, "posts_on_page": posts_on_page, "username": username},
+        {
+            "all_posts": all_posts,
+            "posts_on_page": posts_on_page,
+            "username": username,
+            "following": following,
+            "followers": followers,
+            "is_following": is_following,
+            "user_profile": user,
+        },
     )
-    return
+
+
+def follow(request):
+    userfollow = request.POST["userfollow"]
+    currentuser = User.objects.get(pk=request.user.id)
+    userfollow_data = User.objects.get(username=userfollow)
+    f = Follow(user=currentuser, user_follower=userfollow_data)
+    f.save()
+    user_id = userfollow_data.id
+    return HttpResponseRedirect(reverse(profile, kwargs={"user_id": user_id}))
+
+
+def unfollow(request):
+    userfollow = request.POST["userfollow"]
+    currentuser = User.objects.get(pk=request.user.id)
+    userfollow_data = User.objects.get(username=userfollow)
+    f = Follow.objects.get(user=currentuser, user_follower=userfollow_data)
+    f.delete()
+    user_id = userfollow_data.id
+    return HttpResponseRedirect(reverse(profile, kwargs={"user_id": user_id}))
+
+
+def following(request):
+    current_user = User.objects.get(pk=request.user.id)
+    following_people = Follow.objects.filter(user=current_user)
+    all_posts = Post.objects.all().order_by("id").reverse()
+
+    following_posts = []
+
+    for post in all_posts:
+        for person in following_people:
+            if person.user_follower == post.user:
+                following_posts.append(post)
+
+    # Pagination
+    paginator = Paginator(following_posts, 10)
+    page_number = request.GET.get("page")
+    posts_on_page = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "network/following.html",
+        {
+            "posts_on_page": posts_on_page,
+        },
+    )

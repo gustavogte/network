@@ -2,11 +2,34 @@
 
 {% block body %}
     <h1>{{ username }}</h1>
-    
+        <div class="container">
+            <div class="row d-flex justify-content-center">
+                <h3 class="col-4">Followers: {{ followers.count }} </h3>
+                <h3 class="col-4">Following: {{ following.count }} </h3>
+                {% if user.is_authenticated %}
+                    {% if user != user_profile %}
+                        {% if is_following %}
+                            <form action="{% url 'unfollow' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="userfollow" value="{{ user_profile }}"/>
+                                <input type="submit" value="Unfollow" class="btn btn-danger"/> 
+                            </form>
+                        {% else %}
+                            <form action="{% url 'follow' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="userfollow" value="{{ user_profile }}"/>
+                                <input type="submit" value="Follow" class="btn btn-success"/> 
+                            </form>
+                            {% endif %}
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
         <div>
         {% for post in posts_on_page %}
             <div style="border: solid .1px gray; margin: 1em;" >
-                <h5 style="font-size: 15px;">@{{ post.user }}</h5>
+                <h5 style="font-size: 15px;"><a href="{% url 'profile' user_id=post.user.id %}">@{{ post.user }}</a></h5>
                 <h6 style="font-size: 22px;">{{ post.content }}</h6>
                 <p style="color: gray; font-size: 12px;">{{ post.date }}</p>
             </div>
