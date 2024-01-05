@@ -1,5 +1,38 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
-    TODO
+    <h1>All Posts</h1>
+    {% if user.is_authenticated %}
+        <div style="margin: 1em;" >
+            <h2>New Post</h2>
+            <form action="{% url 'new_post' %}" method="POST">
+            {% csrf_token %}
+            <textarea name="content" row="4" cols="50"></textarea>
+            <br>
+            <input type="submit" value="Post" class="btn btn-primary">
+            </form>
+        </div>
+    {% endif %}
+        
+        <div>
+        {% for post in posts_on_page %}
+            <div style="border: solid .1px gray; margin: 1em;" >
+                <h5 style="font-size: 15px;">@{{ post.user }}</h5>
+                <h6 style="font-size: 22px;">{{ post.content }}</h6>
+                <p style="color: gray; font-size: 12px;">{{ post.date }}</p>
+            </div>
+        {% endfor %}
+        </div>
+
+        <nav aria-label="Page navigation example">
+            <ul class="pagination d-flex justify-content-center">
+                {% if posts_on_page.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{posts_on_page.previous_page_number}}">Previos</a></li>
+                {% endif %}
+                {% if posts_on_page.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{posts_on_page.next_page_number}}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+
 {% endblock %}

@@ -4,11 +4,23 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User
+from django.core.paginator import Paginator
+
+from .models import User, Post
 
 
 def index(request):
-    return render(request, "network/index.html")
+    all_posts = Post.objects.all().order_by("id").reverse()
+
+    # Pagination
+    paginator = Paginator(all_posts, 1)
+    page_number = request.GET.get('page')
+    posts_on_page = paginator.get_page(page_number)
+
+    return render(request, "network/index.html", {
+        "all_posts": all_posts,
+        "posts_on_page": posts_on_page
+    })
 
 
 def login_view(request):
@@ -61,3 +73,12 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+def new_post(request):
+    if request.method == "POST":
+        content = request.POST['content']
+        user = User.objects.get(pk=request.user.id)
+        post = Post(content=content, user=user)
+        post.save()
+        return HttpResponseRedirect(reverse(index))
+        

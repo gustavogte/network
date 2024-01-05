@@ -1,0 +1,27 @@
+.new_post {
+    margin: 1em;
+}
+    
+.all_posts {
+    color: blue;    
+}
+
+
+.post {
+    border: .2px solid grey
+}
+
+.username {
+    font-size: 15;
+}
+.content {
+    font-size: 22px;
+    color: blue;
+
+}
+
+.date {
+    font-size: 12px;
+    color: gray;
+
+}
