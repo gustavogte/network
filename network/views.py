@@ -13,19 +13,19 @@ def index(request):
     all_posts = Post.objects.all().order_by("id").reverse()
 
     # Pagination
-    paginator = Paginator(all_posts, 1)
-    page_number = request.GET.get('page')
+    paginator = Paginator(all_posts, 10)
+    page_number = request.GET.get("page")
     posts_on_page = paginator.get_page(page_number)
 
-    return render(request, "network/index.html", {
-        "all_posts": all_posts,
-        "posts_on_page": posts_on_page
-    })
+    return render(
+        request,
+        "network/index.html",
+        {"all_posts": all_posts, "posts_on_page": posts_on_page},
+    )
 
 
 def login_view(request):
     if request.method == "POST":
-
         # Attempt to sign user in
         username = request.POST["username"]
         password = request.POST["password"]
@@ -36,9 +36,11 @@ def login_view(request):
             login(request, user)
             return HttpResponseRedirect(reverse("index"))
         else:
-            return render(request, "network/login.html", {
-                "message": "Invalid username and/or password."
-            })
+            return render(
+                request,
+                "network/login.html",
+                {"message": "Invalid username and/or password."},
+            )
     else:
         return render(request, "network/login.html")
 
@@ -57,28 +59,46 @@ def register(request):
         password = request.POST["password"]
         confirmation = request.POST["confirmation"]
         if password != confirmation:
-            return render(request, "network/register.html", {
-                "message": "Passwords must match."
-            })
+            return render(
+                request, "network/register.html", {"message": "Passwords must match."}
+            )
 
         # Attempt to create new user
         try:
             user = User.objects.create_user(username, email, password)
             user.save()
         except IntegrityError:
-            return render(request, "network/register.html", {
-                "message": "Username already taken."
-            })
+            return render(
+                request, "network/register.html", {"message": "Username already taken."}
+            )
         login(request, user)
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
 
+
 def new_post(request):
     if request.method == "POST":
-        content = request.POST['content']
+        content = request.POST["content"]
         user = User.objects.get(pk=request.user.id)
         post = Post(content=content, user=user)
         post.save()
         return HttpResponseRedirect(reverse(index))
-        
+
+
+def profile(request, user_id):
+    user = User.objects.get(pk=user_id)
+    all_posts = Post.objects.filter(user=user).order_by("id").reverse()
+    username = user.username
+
+    # Pagination
+    paginator = Paginator(all_posts, 10)
+    page_number = request.GET.get("page")
+    posts_on_page = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "network/profile.html",
+        {"all_posts": all_posts, "posts_on_page": posts_on_page, "username": username},
+    )
+    return
